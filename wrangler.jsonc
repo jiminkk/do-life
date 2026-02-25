@@ -1,29 +1,46 @@
 {
   // Schema reference for wrangler configuration
   "$schema": "node_modules/wrangler/config-schema.json",
-
   // Name of your worker
   "name": "do-life",
-
   // Entry point for your worker
   "main": "src/worker.tsx",
-
   // Compatibility settings
   "compatibility_date": "2025-08-21",
   "compatibility_flags": ["nodejs_compat"],
-
   // Assets configuration
   "assets": {
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
-
   // Observability settings
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
-
+  // KV Namespaces — replace placeholder IDs after running `wrangler kv namespace create <NAME>`
+  "kv_namespaces": [
+    {
+      "binding": "DID_CACHE",
+      "id": "d79ee673fe124a09b295aeecb427c2eb",
+      "remote": true,
+    },
+    {
+      "binding": "HANDLE_CACHE",
+      "id": "f2ef5b0c21094c3582dc837c5dd7dc16",
+      "remote": true,
+    },
+    {
+      "binding": "OAUTH_STATE_STORE",
+      "id": "4ad9cfcdb73f41e8a833b530ec656d30",
+      "remote": true,
+    },
+    {
+      "binding": "OAUTH_SESSION_STORE",
+      "id": "db69a9eec5734159866620ea15a31a47",
+      "remote": true,
+    },
+  ],
   // Environment variables
   "vars": {
-    // Add your environment variables here
-  }
+    "PUBLIC_URL": "https://do-life.jkjimin95.workers.dev/",
+  },
 }

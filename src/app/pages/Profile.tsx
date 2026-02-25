@@ -6,6 +6,7 @@ import {
   EditableLifeEvent,
   LifeEventInput,
   LifeEvent,
+  Main,
 } from "@/app/ui-components"
 import { useState } from "react"
 
@@ -43,39 +44,41 @@ export const Profile = () => {
   }
 
   return (
-    <Container>
-      <main className="flex-1 pb-10 w-full">
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-stone-500">
-            Hi! This is @{username}
-            <br />
-            <BioInput bio={bio} onSubmit={onBioSubmit} />
-          </p>
-        </div>
-      </main>
+    <Main>
+      <Container>
+        <main className="flex-1 pb-10 w-full">
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-stone-500">
+              Hi! This is @{username}
+              <br />
+              <BioInput bio={bio} onSubmit={onBioSubmit} />
+            </p>
+          </div>
+        </main>
 
-      <main className="flex flex-col gap-8 w-full">
-        {lifeEvents.map((event, index) => (
-          <EditableLifeEvent
-            key={`${event.title}-${index}`}
-            event={event}
-            onUpdate={(updated) => onLifeEventUpdate(index, updated)}
-          />
-        ))}
-      </main>
+        <main className="flex flex-col gap-8 w-full">
+          {lifeEvents.map((event, index) => (
+            <EditableLifeEvent
+              key={`${event.title}-${index}`}
+              event={event}
+              onUpdate={(updated) => onLifeEventUpdate(index, updated)}
+            />
+          ))}
+        </main>
 
-      <main className="w-full">
-        <button
-          className="text-xs"
-          onClick={() => {
-            console.log("hello")
-            setShowEventInput(true)
-          }}
-        >
-          Enter a Life event..
-        </button>
-        <LifeEventInput onSubmit={onLifeEventSubmit} />
-      </main>
-    </Container>
+        <main className="w-full">
+          <button
+            className="text-xs"
+            onClick={() => {
+              console.log("hello")
+              setShowEventInput(true)
+            }}
+          >
+            Enter a Life event..
+          </button>
+          <LifeEventInput onSubmit={onLifeEventSubmit} />
+        </main>
+      </Container>
+    </Main>
   )
 }
