@@ -8,11 +8,12 @@ import {
 import { JoseKey } from "@atproto/jwk-jose"
 
 function clientMetadata(env: Env) {
+  const baseUrl = env.PUBLIC_URL.replace(/\/$/, "")
   return {
-    client_id: `${env.PUBLIC_URL}/client-metadata.json`,
+    client_id: `${baseUrl}/client-metadata.json`,
     client_name: "Do Life",
-    client_uri: env.PUBLIC_URL,
-    redirect_uris: [`${env.PUBLIC_URL}/oauth/callback`] as [
+    client_uri: baseUrl,
+    redirect_uris: [`${baseUrl}/oauth/callback`] as [
       string,
       ...string[],
     ],
@@ -26,7 +27,7 @@ function clientMetadata(env: Env) {
     token_endpoint_auth_method: "private_key_jwt" as const,
     token_endpoint_auth_signing_alg: "ES256" as const,
     dpop_bound_access_tokens: true,
-    jwks_uri: `${env.PUBLIC_URL}/jwks.json`,
+    jwks_uri: `${baseUrl}/jwks.json`,
   }
 }
 
