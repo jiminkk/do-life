@@ -13,10 +13,7 @@ function clientMetadata(env: Env) {
     client_id: `${baseUrl}/client-metadata.json`,
     client_name: "Do Life",
     client_uri: baseUrl,
-    redirect_uris: [`${baseUrl}/oauth/callback`] as [
-      string,
-      ...string[],
-    ],
+    redirect_uris: [`${baseUrl}/oauth/callback`] as [string, ...string[]],
     grant_types: ["authorization_code", "refresh_token"] as [
       "authorization_code",
       "refresh_token",

@@ -7,7 +7,10 @@ interface EditableFieldProps {
   onSave: (value: string) => void
   type?: "text" | "date"
   multiline?: boolean
+  placeholder?: string
   className?: string
+  onEditingChange?: (isEditing: boolean) => void
+  editable?: boolean
 }
 
 export const EditableField = ({
@@ -15,26 +18,21 @@ export const EditableField = ({
   onSave,
   type = "text",
   multiline = false,
+  placeholder = "",
   className = "",
+  onEditingChange,
+  editable = true,
 }: EditableFieldProps) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value)
   const inputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const adjustTextareaHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto"
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-    }
-  }
-
   useEffect(() => {
     if (isEditing) {
       if (multiline && textareaRef.current) {
         textareaRef.current.focus()
         textareaRef.current.select()
-        adjustTextareaHeight()
       } else if (inputRef.current) {
         inputRef.current.focus()
         if (type === "text") {
@@ -45,12 +43,15 @@ export const EditableField = ({
   }, [isEditing, type, multiline])
 
   const handleClick = () => {
+    if (!editable) return
     setEditValue(value)
     setIsEditing(true)
+    onEditingChange?.(true)
   }
 
   const handleBlur = () => {
     setIsEditing(false)
+    onEditingChange?.(false)
     if (editValue !== value) {
       onSave(editValue)
     }
@@ -71,13 +72,11 @@ export const EditableField = ({
         <textarea
           ref={textareaRef}
           value={editValue}
-          onChange={(e) => {
-            setEditValue(e.target.value)
-            adjustTextareaHeight()
-          }}
+          placeholder={placeholder}
+          onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className={`outline-none bg-stone-100 w-full rounded resize-none overflow-hidden`}
+          className={`outline-none bg-stone-100 rounded px-2 py-1 w-full resize-none overflow-y-auto h-24`}
         />
       )
     }
@@ -95,12 +94,29 @@ export const EditableField = ({
     )
   }
 
+  if (multiline) {
+    return (
+      <span
+        onClick={handleClick}
+        className={`${
+          editable ? "cursor-pointer" : "cursor-default"
+        } block w-full min-h-6 whitespace-pre-wrap ${className}`}
+      >
+        {value || <span className="text-stone-400">{placeholder}</span>}
+      </span>
+    )
+  }
+
   return (
     <span
       onClick={handleClick}
-      className={`cursor-pointer hover:bg-stone-100 rounded px-1 -mx-1 transition-colors ${multiline ? "whitespace-pre-wrap block w-full" : ""} ${className}`}
+      className={`${
+        editable
+          ? "cursor-pointer bg-stone-100 rounded px-1 -mx-1 hover:bg-stone-200"
+          : "cursor-default"
+      } transition-colors ${className}`}
     >
-      {value}
+      {value || <span className="text-stone-400">{placeholder}</span>}
     </span>
   )
 }

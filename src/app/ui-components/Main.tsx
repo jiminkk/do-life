@@ -1,4 +1,4 @@
-import { Sidebar } from "./Sidebar"
+import { Sidebar } from "./sidebar"
 
 export const Main = ({ children }: { children: React.ReactNode }) => {
   return (

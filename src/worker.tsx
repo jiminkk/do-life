@@ -16,6 +16,7 @@ import {
   serveClientMetadata,
   serveJwks,
 } from "@/auth/routes"
+import { loadProfile } from "@/app/actions/profile"
 
 export type AppContext = {
   isAuthenticated?: boolean
@@ -27,17 +28,17 @@ export default defineApp([
   setCommonHeaders(),
   loadSession(),
 
-  // Static/API endpoints (no HTML rendering needed)
+  // OAuth endpoints
   route("/client-metadata.json", serveClientMetadata),
   route("/jwks.json", serveJwks),
   route("/oauth/callback", handleCallback),
   route("/logout", handleLogout),
   route("/login/authorize", handleAuthorize),
 
-  // Auth gating: redirect unauthenticated users to /login, authenticated users away from /login
+  // Auth gating
   requireAuth,
 
-  // HTML pages
+  // Pages
   render(Document, [
     route("/login", ({ request }) => {
       const error = new URL(request.url).searchParams.get("error")
@@ -45,6 +46,16 @@ export default defineApp([
     }),
     route("/", ({ ctx }) => <DashboardPage username={ctx.username ?? ""} />),
     route("/about", About),
-    route("/profile", Profile),
+    route("/profile", async ({ ctx }) => {
+      const username = ctx.username ?? ""
+      const profile = ctx.did
+        ? await loadProfile(ctx.did, username)
+        : {
+            handle: username,
+            bio: "I am a writer and an aspiring designer...",
+            lifeEvents: [],
+          }
+      return <Profile initialProfile={profile} username={username} />
+    }),
   ]),
 ])

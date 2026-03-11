@@ -12,12 +12,14 @@ export const BioInput = ({ bio, onSubmit }: BioInputProps) => {
     onSubmit({ bio: value })
   }
 
+  console.log("bio: ", bio)
+
   return (
     <EditableField
       value={bio}
       onSave={handleSave}
       multiline
-      className="block w-full"
+      placeholder="I am a writer and an aspiring designer..."
     />
   )
 }

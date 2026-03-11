@@ -6,6 +6,12 @@ import { createSessionCookie, clearSessionCookie, getSession } from "./session"
 export const loadSession =
   (): RouteMiddleware =>
   async ({ request, ctx }) => {
+    if (import.meta.env.VITE_IS_DEV_SERVER) {
+      ctx.isAuthenticated = true
+      ctx.did = "did:plc:dev"
+      ctx.username = "dev.bsky.social"
+      return
+    }
     const session = await getSession(request, env.SESSION_SECRET)
     if (session) {
       ctx.isAuthenticated = true
@@ -17,7 +23,7 @@ export const loadSession =
 export const requireAuth: RouteMiddleware = ({ ctx, request }) => {
   const { pathname } = new URL(request.url)
   const publicPaths = ["/login", "/about"]
-  if (!ctx.isAuthenticated && !publicPaths.includes(pathname)) {
+  if (!ctx.isAuthenticated && !publicPaths.includes(pathname) && !pathname.startsWith("/xrpc/")) {
     return new Response(null, { status: 302, headers: { Location: "/login" } })
   }
   if (ctx.isAuthenticated && pathname === "/login") {
@@ -94,7 +100,16 @@ export const handleCallback: RouteMiddleware = async ({ request }) => {
   }
 }
 
-export const handleLogout: RouteMiddleware = () => {
+export const handleLogout: RouteMiddleware = async ({ request }) => {
+  const session = await getSession(request, env.SESSION_SECRET)
+  if (session?.did) {
+    try {
+      const client = await createOAuthClient(env)
+      await client.revoke(session.did)
+    } catch {
+      // proceed with logout even if revocation fails
+    }
+  }
   return new Response(null, {
     status: 302,
     headers: { Location: "/login", "Set-Cookie": clearSessionCookie() },

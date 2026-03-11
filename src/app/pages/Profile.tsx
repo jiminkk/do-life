@@ -4,43 +4,65 @@ import {
   BioInput,
   Container,
   EditableLifeEvent,
-  LifeEventInput,
+  NewLifeEvent,
   LifeEvent,
   Main,
 } from "@/app/ui-components"
+import { ProfileData } from "@/app/types/types"
+import { updateBio, addLifeEvent, updateLifeEvent } from "@/app/actions/profile"
 import { useState } from "react"
 
-export const Profile = () => {
-  const [username, setUsername] = useState("jasmine")
-  const [bio, setBio] = useState("hey doods")
+interface ProfileProps {
+  initialProfile: ProfileData | null
+  username: string
+}
 
-  const initialLifeEvents = [
-    {
-      title: "Amazon Music",
-      description:
-        "I worked on the Amazon Music team as a software engineer. blahb labh blah",
-      startDate: new Date("2017-08-13"),
-      endDate: new Date("2022-02-02"),
-    },
-  ]
-  const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>(initialLifeEvents)
+export const Profile = ({ initialProfile, username }: ProfileProps) => {
+  const [bio, setBio] = useState(initialProfile?.bio ?? "")
+  const [showNewEvent, setShowNewEvent] = useState(false)
+  const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>(
+    (initialProfile?.lifeEvents ?? []).map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description ?? "",
+      startDate: new Date(r.startDate),
+      endDate: r.endDate ? new Date(r.endDate) : undefined,
+    })),
+  )
 
-  const [showEventInput, setShowEventInput] = useState(false)
-
-  const onLifeEventSubmit = (data: LifeEvent) => {
-    console.log(data)
-    setLifeEvents([...lifeEvents, data])
-  }
-
-  const onBioSubmit = (data: { bio: string }) => {
-    console.log(data)
+  const onBioSubmit = async (data: { bio: string }) => {
     setBio(data.bio)
+    await updateBio(data.bio)
   }
 
-  const onLifeEventUpdate = (index: number, updated: LifeEvent) => {
-    const newEvents = [...lifeEvents]
-    newEvents[index] = updated
-    setLifeEvents(newEvents)
+  const onLifeEventSubmit = async (data: LifeEvent) => {
+    setShowNewEvent(false)
+    const startDate = data.startDate.toISOString().split("T")[0]
+    const endDate = data.endDate?.toISOString().split("T")[0]
+    const { id } = await addLifeEvent({
+      title: data.title,
+      description: data.description,
+      startDate,
+      endDate,
+    })
+    setLifeEvents((prev) => [...prev, { ...data, id }])
+  }
+
+  const onLifeEventUpdate = async (index: number, updated: LifeEvent) => {
+    setLifeEvents((prev) => {
+      const next = [...prev]
+      next[index] = updated
+      return next
+    })
+    if (updated.id) {
+      await updateLifeEvent({
+        id: updated.id,
+        title: updated.title,
+        description: updated.description,
+        startDate: updated.startDate.toISOString().split("T")[0],
+        endDate: updated.endDate?.toISOString().split("T")[0],
+      })
+    }
   }
 
   return (
@@ -59,7 +81,7 @@ export const Profile = () => {
         <main className="flex flex-col gap-8 w-full">
           {lifeEvents.map((event, index) => (
             <EditableLifeEvent
-              key={`${event.title}-${index}`}
+              key={event.id ?? `${event.title}-${index}`}
               event={event}
               onUpdate={(updated) => onLifeEventUpdate(index, updated)}
             />
@@ -67,16 +89,20 @@ export const Profile = () => {
         </main>
 
         <main className="w-full">
-          <button
-            className="text-xs"
-            onClick={() => {
-              console.log("hello")
-              setShowEventInput(true)
-            }}
-          >
-            Enter a Life event..
-          </button>
-          <LifeEventInput onSubmit={onLifeEventSubmit} />
+          {showNewEvent ? (
+            <NewLifeEvent
+              onSubmit={onLifeEventSubmit}
+              onCancel={() => setShowNewEvent(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowNewEvent(true)}
+              className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              + Add event
+            </button>
+          )}
         </main>
       </Container>
     </Main>

@@ -22,6 +22,7 @@
     "types": "tsc"
   },
   "dependencies": {
+    "@atproto/api": "^0.19.3",
     "@atproto/jwk-jose": "^0.1.11",
     "@tailwindcss/vite": "^4.1.18",
     "atproto-oauth-client-cloudflare-workers": "^0.2.2",

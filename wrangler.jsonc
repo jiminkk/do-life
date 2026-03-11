@@ -41,6 +41,6 @@
   ],
   // Environment variables
   "vars": {
-    "PUBLIC_URL": "https://do-life.jkjimin95.workers.dev/",
+    "PUBLIC_URL": "https://lifepo.st",
   },
 }
