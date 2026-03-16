@@ -4,8 +4,8 @@ import { useForm, UseFormRegisterReturn } from "react-hook-form"
 
 export interface LifeEvent {
   id?: string
-  startDate: Date
-  endDate?: Date
+  startDate: string
+  endDate?: string
   title: string
   description: string
 }
@@ -43,13 +43,16 @@ export const LifeEventInput = ({ onSubmit }: LifeEventInputProps) => {
       <div className="flex flex-row gap-2 w-80 mx-auto pt-1">
         <FormInput
           type="date"
-          placeholder="Start date"
-          registration={register("startDate", { valueAsDate: true, required: true })}
+          placeholder="Start"
+          registration={register("startDate", {
+            valueAsDate: true,
+            required: true,
+          })}
         />
         -
         <FormInput
           type="date"
-          placeholder="End date"
+          placeholder="End"
           registration={register("endDate", {
             setValueAs: (v: string) => (v ? new Date(v) : undefined),
           })}

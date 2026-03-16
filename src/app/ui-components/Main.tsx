@@ -1,9 +1,15 @@
 import { Sidebar } from "./sidebar"
 
-export const Main = ({ children }: { children: React.ReactNode }) => {
+export const Main = ({
+  children,
+  username,
+}: {
+  children: React.ReactNode
+  username: string
+}) => {
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar username={username} />
       <main className="flex-1">{children}</main>
     </div>
   )

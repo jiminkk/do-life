@@ -12,8 +12,6 @@ export const BioInput = ({ bio, onSubmit }: BioInputProps) => {
     onSubmit({ bio: value })
   }
 
-  console.log("bio: ", bio)
-
   return (
     <EditableField
       value={bio}

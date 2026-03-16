@@ -46,16 +46,11 @@ export default defineApp([
     }),
     route("/", ({ ctx }) => <DashboardPage username={ctx.username ?? ""} />),
     route("/about", About),
-    route("/profile", async ({ ctx }) => {
-      const username = ctx.username ?? ""
-      const profile = ctx.did
-        ? await loadProfile(ctx.did, username)
-        : {
-            handle: username,
-            bio: "I am a writer and an aspiring designer...",
-            lifeEvents: [],
-          }
-      return <Profile initialProfile={profile} username={username} />
+    route("/:username", async ({ ctx, params }) => {
+      const profileUsername = (params as { username: string }).username
+      const isOwner = ctx.isAuthenticated === true && ctx.username === profileUsername
+      const profile = await loadProfile(profileUsername)
+      return <Profile initialProfile={profile} username={profileUsername} isOwner={isOwner} />
     }),
   ]),
 ])

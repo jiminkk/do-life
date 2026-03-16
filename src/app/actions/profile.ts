@@ -1,6 +1,7 @@
 "use server"
 
 import { requestInfo } from "rwsdk/worker"
+import { Agent } from "@atproto/api"
 import { getAgent } from "@/auth/agent"
 import { ProfileData } from "@/app/types/types"
 
@@ -77,13 +78,27 @@ export async function updateLifeEvent(data: {
   })
 }
 
-export async function loadProfile(
-  did: string,
-  username: string,
-): Promise<ProfileData | null> {
+export async function loadProfile(username: string): Promise<ProfileData | null> {
   if (import.meta.env.VITE_IS_DEV_SERVER) return null
   try {
-    const agent = await getAgent(did)
+    // Resolve handle → DID
+    const resolveResp = await fetch(
+      `https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(username)}`,
+    )
+    if (!resolveResp.ok) return null
+    const { did } = (await resolveResp.json()) as { did: string }
+
+    // Resolve DID → PDS URL
+    const didDocResp = await fetch(`https://plc.directory/${did}`)
+    if (!didDocResp.ok) return null
+    const didDoc = (await didDocResp.json()) as {
+      service?: Array<{ id: string; serviceEndpoint: string }>
+    }
+    const pdsUrl = didDoc.service?.find((s) => s.id === "#atproto_pds")?.serviceEndpoint
+    if (!pdsUrl) return null
+
+    // Fetch records from PDS (public reads, no auth needed)
+    const agent = new Agent(pdsUrl)
     const [profileResp, eventsResp] = await Promise.all([
       agent.com.atproto.repo
         .getRecord({ repo: did, collection: PROFILE_COLLECTION, rkey: "self" })
