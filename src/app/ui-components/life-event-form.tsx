@@ -21,6 +21,8 @@ type LifeEventFormProps =
       isEditing: boolean
       draft?: DraftEvent
       onDraftChange?: (field: string, value: string) => void
+      onClick?: () => void
+      onRemove?: () => void
     }
   | {
       mode: "new"
@@ -53,7 +55,9 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
   const [localStartMonth, setLocalStartMonth] = useState(
     String(now.getMonth() + 1).padStart(2, "0"),
   )
-  const [localStartYear, setLocalStartYear] = useState(String(now.getFullYear()))
+  const [localStartYear, setLocalStartYear] = useState(
+    String(now.getFullYear()),
+  )
   const [localEndMonth, setLocalEndMonth] = useState("")
   const [localEndYear, setLocalEndYear] = useState("")
   const [localDateError, setLocalDateError] = useState("")
@@ -61,7 +65,9 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
   const isNew = props.mode === "new"
 
   const title = isNew ? localTitle : (props.draft?.title ?? "")
-  const description = isNew ? localDescription : (props.draft?.description ?? "")
+  const description = isNew
+    ? localDescription
+    : (props.draft?.description ?? "")
   const startMonth = isNew ? localStartMonth : (props.draft?.startMonth ?? "")
   const startYear = isNew ? localStartYear : (props.draft?.startYear ?? "")
   const endMonth = isNew ? localEndMonth : (props.draft?.endMonth ?? "")
@@ -93,7 +99,10 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
   }
 
   const handleNewSave = () => {
-    if (!localTitle) return
+    if (!localTitle) {
+      setLocalDateError("Title required")
+      return
+    }
     if (!localStartMonth || !localStartYear) {
       setLocalDateError("Start date required")
       return
@@ -116,14 +125,22 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
         ? `${localEndYear}-${localEndMonth}`
         : undefined
     if (props.mode === "new") {
-      props.onSubmit({ title: localTitle, description: localDescription, startDate, endDate })
+      props.onSubmit({
+        title: localTitle,
+        description: localDescription,
+        startDate,
+        endDate,
+      })
     }
   }
 
   // Published view — shown when not in edit mode
   if (props.mode === "editing" && !props.isEditing) {
     return (
-      <div className="relative text-sm text-stone-500">
+      <div
+        className={`relative text-sm text-stone-500${props.onClick ? " cursor-pointer hover:bg-stone-50 rounded transition-colors" : ""}`}
+        onClick={props.onClick}
+      >
         <div className="absolute right-full top-0 pr-6 text-xs text-stone-400 text-right whitespace-nowrap">
           <p>
             {formatDate(props.event.startDate)} –{" "}
@@ -173,36 +190,40 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
         <input
           type="text"
           autoFocus={isNew}
-          placeholder={isNew ? "Life event title" : undefined}
+          placeholder={"Life event title"}
           value={title}
           onChange={(e) => handleChange("title", e.target.value)}
           className="outline-none border-b border-stone-300 focus:border-stone-500 bg-transparent w-full font-medium text-stone-700 pb-1 transition-colors"
         />
         <textarea
-          placeholder={isNew ? "Add more detail here" : undefined}
+          placeholder={"Add more detail here"}
           value={description}
           onChange={(e) => handleChange("description", e.target.value)}
           className="outline-none border rounded border-stone-300 focus:border-stone-500 bg-transparent w-full text-sm text-stone-500 px-2 py-2 transition-colors resize-none overflow-y-auto h-24"
           rows={3}
         />
+        {props.mode === "editing" && props.onRemove && (
+          <button
+            type="button"
+            onClick={props.onRemove}
+            className="self-start text-xs text-stone-400 hover:text-red-500 transition-colors"
+          >
+            remove
+          </button>
+        )}
         {props.mode === "new" && !props.onDataChange && (
           <div className="flex gap-2">
             <button
               type="button"
               onClick={handleNewSave}
-              disabled={!localTitle}
-              className={`px-3 py-1 text-xs font-medium rounded ${
-                localTitle
-                  ? "bg-stone-200 text-stone-600 hover:bg-stone-300"
-                  : "bg-stone-100 text-stone-400 cursor-not-allowed"
-              }`}
+              className={`py-1 text-xs rounded font-medium text-stone-400 hover:text-stone-600`}
             >
-              Save
+              Add
             </button>
             <button
               type="button"
               onClick={props.onCancel}
-              className="px-3 py-1 text-xs font-medium rounded border border-stone-300 text-stone-600 hover:bg-stone-100"
+              className="py-1 text-xs rounded font-medium text-stone-400 hover:text-stone-600"
             >
               Cancel
             </button>

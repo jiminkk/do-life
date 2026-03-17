@@ -120,13 +120,6 @@ export const NewLifeEvent = ({ onSubmit, onCancel }: NewLifeEventProps) => {
           >
             Save
           </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-3 py-1 text-xs font-medium rounded border border-stone-300 text-stone-600 hover:bg-stone-100"
-          >
-            Cancel
-          </button>
         </div>
       </div>
     </div>

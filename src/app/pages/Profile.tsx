@@ -11,22 +11,6 @@ interface ProfileProps {
   username: string
 }
 
-const groupBySection = (
-  events: LifeEvent[],
-): { section: string; events: LifeEvent[] }[] => {
-  const groups: { section: string; events: LifeEvent[] }[] = []
-  events.forEach((event) => {
-    const section = event.section ?? ""
-    const existing = groups.find((g) => g.section === section)
-    if (existing) {
-      existing.events.push(event)
-    } else {
-      groups.push({ section, events: [event] })
-    }
-  })
-  return groups
-}
-
 export const Profile = ({ initialProfile, username }: ProfileProps) => {
   const bio = initialProfile?.bio ?? ""
   const lifeEvents: LifeEvent[] = (initialProfile?.lifeEvents ?? []).map(
@@ -39,8 +23,6 @@ export const Profile = ({ initialProfile, username }: ProfileProps) => {
       section: r.section,
     }),
   )
-
-  const groups = groupBySection(lifeEvents)
 
   return (
     <div className="min-h-screen">
@@ -68,28 +50,16 @@ export const Profile = ({ initialProfile, username }: ProfileProps) => {
             </div>
           </main>
           <main className="flex flex-col gap-10 w-full">
-            {groups.map(({ section, events: groupEvents }) => (
-              <div
-                key={section || "__unsectioned"}
-                className="flex flex-col gap-8"
-              >
-                {section && (
-                  <div className="relative h-5">
-                    <p className="absolute right-full top-0 pr-6 text-sm font-medium text-stone-700 whitespace-nowrap">
-                      {section}
-                    </p>
-                  </div>
-                )}
-                {groupEvents.map((event, gi) => (
-                  <LifeEventForm
-                    key={event.id ?? `${event.title}-${gi}`}
-                    mode="editing"
-                    event={event}
-                    isEditing={false}
-                  />
-                ))}
-              </div>
-            ))}
+            <div className="flex flex-col gap-8">
+              {lifeEvents.map((event, i) => (
+                <LifeEventForm
+                  key={event.id ?? `${event.title}-${i}`}
+                  mode="editing"
+                  event={event}
+                  isEditing={false}
+                />
+              ))}
+            </div>
           </main>
         </Container>
       </main>

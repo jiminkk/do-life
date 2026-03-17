@@ -82,6 +82,19 @@ export async function updateLifeEvent(data: {
   })
 }
 
+export async function deleteLifeEvent(id: string): Promise<void> {
+  const { ctx } = requestInfo
+  if (!ctx.isAuthenticated || !ctx.did) throw new Error("AuthRequired")
+  if (import.meta.env.VITE_IS_DEV_SERVER) return
+
+  const agent = await getAgent(ctx.did)
+  await agent.com.atproto.repo.deleteRecord({
+    repo: ctx.did,
+    collection: LIFE_EVENT_COLLECTION,
+    rkey: id,
+  })
+}
+
 export async function loadProfile(username: string): Promise<ProfileData | null> {
   if (import.meta.env.VITE_IS_DEV_SERVER) return null
   try {
