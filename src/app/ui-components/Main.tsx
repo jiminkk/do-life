@@ -1,4 +1,4 @@
-import { Sidebar } from "./sidebar"
+import { Navbar } from "./navbar"
 
 export const Main = ({
   children,
@@ -8,9 +8,9 @@ export const Main = ({
   username: string
 }) => {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar username={username} />
-      <main className="flex-1">{children}</main>
+    <div className="min-h-screen">
+      <Navbar username={username} />
+      <main>{children}</main>
     </div>
   )
 }

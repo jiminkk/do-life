@@ -23,7 +23,7 @@ export const loadSession =
 export const requireAuth: RouteMiddleware = ({ ctx, request }) => {
   const { pathname } = new URL(request.url)
   // Only the dashboard requires authentication; profile pages are public
-  const privatePaths = ["/"]
+  const privatePaths = ["/", "/edit-profile"]
   if (!ctx.isAuthenticated && privatePaths.includes(pathname)) {
     return new Response(null, { status: 302, headers: { Location: "/login" } })
   }

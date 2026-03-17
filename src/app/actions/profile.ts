@@ -27,6 +27,7 @@ export async function addLifeEvent(data: {
   description?: string
   startDate: string
   endDate?: string
+  section?: string
 }): Promise<{ id: string }> {
   const { ctx } = requestInfo
   if (!ctx.isAuthenticated || !ctx.did) throw new Error("AuthRequired")
@@ -47,6 +48,7 @@ export async function addLifeEvent(data: {
       description: data.description ?? "",
       startDate: data.startDate,
       endDate: data.endDate,
+      section: data.section,
     },
   })
   return { id: rkey }
@@ -58,6 +60,7 @@ export async function updateLifeEvent(data: {
   description?: string
   startDate: string
   endDate?: string
+  section?: string
 }): Promise<void> {
   const { ctx } = requestInfo
   if (!ctx.isAuthenticated || !ctx.did) throw new Error("AuthRequired")
@@ -74,6 +77,7 @@ export async function updateLifeEvent(data: {
       description: data.description,
       startDate: data.startDate,
       endDate: data.endDate,
+      section: data.section,
     },
   })
 }
@@ -114,6 +118,7 @@ export async function loadProfile(username: string): Promise<ProfileData | null>
         description?: string
         startDate: string
         endDate?: string
+        section?: string
       }
       return {
         id: r.uri.split("/").pop()!,
@@ -121,6 +126,7 @@ export async function loadProfile(username: string): Promise<ProfileData | null>
         description: v.description,
         startDate: v.startDate,
         endDate: v.endDate,
+        section: v.section,
       }
     })
     return { handle: username, bio, lifeEvents }

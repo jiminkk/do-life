@@ -26,6 +26,14 @@ type LifeEventFormProps =
       mode: "new"
       onSubmit: (event: LifeEvent) => void
       onCancel: () => void
+      onDataChange?: (data: {
+        title: string
+        description: string
+        startMonth: string
+        startYear: string
+        endMonth: string
+        endYear: string
+      }) => void
     }
 
 const formatDate = (dateStr: string) => {
@@ -45,9 +53,7 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
   const [localStartMonth, setLocalStartMonth] = useState(
     String(now.getMonth() + 1).padStart(2, "0"),
   )
-  const [localStartYear, setLocalStartYear] = useState(
-    String(now.getFullYear()),
-  )
+  const [localStartYear, setLocalStartYear] = useState(String(now.getFullYear()))
   const [localEndMonth, setLocalEndMonth] = useState("")
   const [localEndYear, setLocalEndYear] = useState("")
   const [localDateError, setLocalDateError] = useState("")
@@ -55,9 +61,7 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
   const isNew = props.mode === "new"
 
   const title = isNew ? localTitle : (props.draft?.title ?? "")
-  const description = isNew
-    ? localDescription
-    : (props.draft?.description ?? "")
+  const description = isNew ? localDescription : (props.draft?.description ?? "")
   const startMonth = isNew ? localStartMonth : (props.draft?.startMonth ?? "")
   const startYear = isNew ? localStartYear : (props.draft?.startYear ?? "")
   const endMonth = isNew ? localEndMonth : (props.draft?.endMonth ?? "")
@@ -73,6 +77,16 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
       else if (field === "startYear") setLocalStartYear(value)
       else if (field === "endMonth") setLocalEndMonth(value)
       else if (field === "endYear") setLocalEndYear(value)
+      if (props.mode === "new" && props.onDataChange) {
+        props.onDataChange({
+          title: field === "title" ? value : localTitle,
+          description: field === "description" ? value : localDescription,
+          startMonth: field === "startMonth" ? value : localStartMonth,
+          startYear: field === "startYear" ? value : localStartYear,
+          endMonth: field === "endMonth" ? value : localEndMonth,
+          endYear: field === "endYear" ? value : localEndYear,
+        })
+      }
     } else {
       props.onDraftChange?.(field, value)
     }
@@ -102,15 +116,11 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
         ? `${localEndYear}-${localEndMonth}`
         : undefined
     if (props.mode === "new") {
-      props.onSubmit({
-        title: localTitle,
-        description: localDescription,
-        startDate,
-        endDate,
-      })
+      props.onSubmit({ title: localTitle, description: localDescription, startDate, endDate })
     }
   }
 
+  // Published view — shown when not in edit mode
   if (props.mode === "editing" && !props.isEditing) {
     return (
       <div className="relative text-sm text-stone-500">
@@ -128,9 +138,10 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
     )
   }
 
+  // Editor — shown when isEditing=true or mode="new"
   return (
     <div className="relative text-sm text-stone-500">
-      <div className="absolute right-full top-0 pr-6 flex flex-col gap-1">
+      <div className="absolute right-full top-0 pr-6 flex flex-col gap-2">
         <div className="grid grid-cols-[auto_auto] items-center gap-x-3 gap-y-1">
           <span className="text-xs text-stone-400 text-right whitespace-nowrap">
             start*
@@ -174,7 +185,7 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
           className="outline-none border rounded border-stone-300 focus:border-stone-500 bg-transparent w-full text-sm text-stone-500 px-2 py-2 transition-colors resize-none overflow-y-auto h-24"
           rows={3}
         />
-        {props.mode === "new" && (
+        {props.mode === "new" && !props.onDataChange && (
           <div className="flex gap-2">
             <button
               type="button"
@@ -182,8 +193,8 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
               disabled={!localTitle}
               className={`px-3 py-1 text-xs font-medium rounded ${
                 localTitle
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-stone-200 text-stone-500 cursor-not-allowed"
+                  ? "bg-stone-200 text-stone-600 hover:bg-stone-300"
+                  : "bg-stone-100 text-stone-400 cursor-not-allowed"
               }`}
             >
               Save

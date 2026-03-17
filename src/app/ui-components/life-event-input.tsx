@@ -4,6 +4,7 @@ import { useForm, UseFormRegisterReturn } from "react-hook-form"
 
 export interface LifeEvent {
   id?: string
+  section?: string
   startDate: string
   endDate?: string
   title: string

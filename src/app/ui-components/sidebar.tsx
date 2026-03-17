@@ -9,7 +9,15 @@ export const Sidebar = ({ username }: { username: string }) => {
         </a>
         <nav className="flex flex-col gap-1">
           <a
+            href="/edit-profile"
+            className="text-sm font-medium text-stone-600 hover:text-stone-900 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors"
+          >
+            Edit page
+          </a>
+          <a
             href={`/${username}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-sm font-medium text-stone-600 hover:text-stone-900 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors"
           >
             Your page

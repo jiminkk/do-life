@@ -7,6 +7,7 @@ import { About } from "@/app/pages/About"
 import { DashboardPage } from "@/app/pages/Home"
 import { LoginPage } from "@/app/pages/Login"
 import { Profile } from "@/app/pages/Profile"
+import { EditProfile } from "@/app/pages/EditProfile"
 import {
   loadSession,
   requireAuth,
@@ -46,11 +47,15 @@ export default defineApp([
     }),
     route("/", ({ ctx }) => <DashboardPage username={ctx.username ?? ""} />),
     route("/about", About),
-    route("/:username", async ({ ctx, params }) => {
+    route("/edit-profile", async ({ ctx }) => {
+      const username = ctx.username ?? ""
+      const profile = await loadProfile(username)
+      return <EditProfile initialProfile={profile} username={username} />
+    }),
+    route("/:username", async ({ params }) => {
       const profileUsername = (params as { username: string }).username
-      const isOwner = ctx.isAuthenticated === true && ctx.username === profileUsername
       const profile = await loadProfile(profileUsername)
-      return <Profile initialProfile={profile} username={profileUsername} isOwner={isOwner} />
+      return <Profile initialProfile={profile} username={profileUsername} />
     }),
   ]),
 ])
