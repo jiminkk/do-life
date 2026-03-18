@@ -1,12 +1,9 @@
 "use server"
 
-import { env } from "cloudflare:workers"
 import { requestInfo } from "rwsdk/worker"
 import { Agent } from "@atproto/api"
 import { getAgent } from "@/auth/agent"
 import { ProfileData } from "@/app/types/types"
-import { fetchBlueskyProfile } from "@/lib/bluesky"
-import { upsertUser, updateAvatarUrl } from "@/lib/db"
 
 const LIFE_EVENT_COLLECTION = "st.lifepo.lifeEvent"
 const PROFILE_COLLECTION = "st.lifepo.profile"
@@ -96,27 +93,6 @@ export async function deleteLifeEvent(id: string): Promise<void> {
     collection: LIFE_EVENT_COLLECTION,
     rkey: id,
   })
-}
-
-export async function syncAvatar(): Promise<void> {
-  const { ctx } = requestInfo
-  if (!ctx.isAuthenticated || !ctx.did) throw new Error("AuthRequired")
-  if (import.meta.env.VITE_IS_DEV_SERVER) return
-
-  const { handle, avatar } = await fetchBlueskyProfile(ctx.did)
-  await upsertUser(env.DB, {
-    did: ctx.did,
-    handle: handle ?? ctx.username ?? ctx.did,
-    bskyAvatarUrl: avatar,
-  })
-}
-
-export async function uploadAvatar(dataUrl: string): Promise<void> {
-  const { ctx } = requestInfo
-  if (!ctx.isAuthenticated || !ctx.did) throw new Error("AuthRequired")
-  if (import.meta.env.VITE_IS_DEV_SERVER) return
-
-  await updateAvatarUrl(env.DB, ctx.did, dataUrl)
 }
 
 export async function loadProfile(

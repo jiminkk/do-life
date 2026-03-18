@@ -15,10 +15,8 @@ import {
   addLifeEvent,
   updateLifeEvent,
   deleteLifeEvent,
-  syncAvatar,
-  uploadAvatar,
 } from "@/app/actions/profile"
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef } from "react"
 
 interface EditProfileProps {
   initialProfile: ProfileData | null
@@ -54,6 +52,7 @@ export const EditProfile = ({ initialProfile, username, avatarUrl }: EditProfile
   )
 
   const [bio, setBio] = useState(initialProfile?.bio ?? "")
+  const [draftBio, setDraftBio] = useState(initialProfile?.bio ?? "")
   const [showSaved, setShowSaved] = useState(false)
   const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>(initialEvents)
   const [drafts, setDrafts] = useState<DraftEvent[]>(() =>
@@ -63,14 +62,7 @@ export const EditProfile = ({ initialProfile, username, avatarUrl }: EditProfile
   const [removedIds, setRemovedIds] = useState<string[]>([])
   const savedSnapshot = useRef<LifeEvent[]>(lifeEvents)
 
-  const handleImageSelect = useCallback((file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
-      uploadAvatar(dataUrl).catch(() => {})
-    }
-    reader.readAsDataURL(file)
-  }, [])
+  const isProfileDirty = draftBio !== bio
 
   const handleRemove = (index: number) => {
     const event = lifeEvents[index]
@@ -79,9 +71,20 @@ export const EditProfile = ({ initialProfile, username, avatarUrl }: EditProfile
     setDrafts((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const onBioSubmit = async (data: { bio: string }) => {
-    setBio(data.bio)
-    await updateBio(data.bio)
+  const onBioSubmit = (data: { bio: string }) => {
+    setDraftBio(data.bio)
+  }
+
+  const handleProfileSave = async () => {
+    if (draftBio !== bio) {
+      setBio(draftBio)
+      await updateBio(draftBio)
+    }
+    triggerSavedToast()
+  }
+
+  const handleProfileCancel = () => {
+    setDraftBio(bio)
   }
 
   const triggerSavedToast = () => {
@@ -188,9 +191,6 @@ export const EditProfile = ({ initialProfile, username, avatarUrl }: EditProfile
     setLifeEvents(savedEvents)
     setDrafts(toDrafts(savedEvents))
     savedSnapshot.current = savedEvents
-
-    // Sync avatar in the background — don't block the save
-    syncAvatar().catch(() => {})
   }
 
   const handleAddBlank = () => {
@@ -223,13 +223,32 @@ export const EditProfile = ({ initialProfile, username, avatarUrl }: EditProfile
         <main className="flex-1 pb-10 w-full">
           <div className="relative">
             <div className="absolute right-full top-0 pr-6">
-              <Avatar username={username} editable src={avatarUrl ?? undefined} onImageSelect={handleImageSelect} />
+              <Avatar username={username} src={avatarUrl ?? undefined} />
             </div>
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium text-stone-700">@{username}</p>
-              <BioInput bio={bio} onSubmit={onBioSubmit} />
+              <BioInput bio={draftBio} onSubmit={onBioSubmit} />
             </div>
           </div>
+
+          {isProfileDirty && (
+            <div className="flex gap-3 mt-4">
+              <button
+                type="button"
+                onClick={handleProfileSave}
+                className="px-3 py-1 text-xs font-medium rounded bg-stone-200 text-stone-600 hover:bg-stone-300 transition-colors"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={handleProfileCancel}
+                className="px-3 py-1 text-xs font-medium rounded text-stone-400 hover:text-stone-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </main>
 
         {!isEditingAll && lifeEvents.length > 0 && (

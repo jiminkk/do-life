@@ -16,12 +16,10 @@ export async function getAvatarUrlByHandle(
   handle: string,
 ): Promise<string | null> {
   const row = await db
-    .prepare(
-      `SELECT avatar_url, bsky_avatar_url FROM users WHERE handle = ?`,
-    )
+    .prepare(`SELECT bsky_avatar_url FROM users WHERE handle = ?`)
     .bind(handle)
-    .first<{ avatar_url: string | null; bsky_avatar_url: string | null }>()
-  return row?.avatar_url ?? row?.bsky_avatar_url ?? null
+    .first<{ bsky_avatar_url: string | null }>()
+  return row?.bsky_avatar_url ?? null
 }
 
 export async function getOrFetchAvatarUrl(
@@ -33,16 +31,13 @@ export async function getOrFetchAvatarUrl(
     avatar: string | null
   }>,
 ): Promise<string | null> {
-  // Check DB first
   const row = await db
-    .prepare(
-      `SELECT avatar_url, bsky_avatar_url FROM users WHERE handle = ?`,
-    )
+    .prepare(`SELECT bsky_avatar_url FROM users WHERE handle = ?`)
     .bind(handle)
-    .first<{ avatar_url: string | null; bsky_avatar_url: string | null }>()
+    .first<{ bsky_avatar_url: string | null }>()
 
   if (row) {
-    return row.avatar_url ?? row.bsky_avatar_url ?? null
+    return row.bsky_avatar_url ?? null
   }
 
   // Not in DB — fetch from Bluesky and insert
@@ -57,15 +52,4 @@ export async function getOrFetchAvatarUrl(
       .run()
   }
   return profile.avatar
-}
-
-export async function updateAvatarUrl(
-  db: D1Database,
-  did: string,
-  avatarUrl: string,
-): Promise<void> {
-  await db
-    .prepare(`UPDATE users SET avatar_url = ? WHERE did = ?`)
-    .bind(avatarUrl, did)
-    .run()
 }

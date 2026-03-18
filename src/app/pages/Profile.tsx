@@ -13,7 +13,11 @@ interface ProfileProps {
   avatarUrl: string | null
 }
 
-export const Profile = ({ initialProfile, username, avatarUrl }: ProfileProps) => {
+export const Profile = ({
+  initialProfile,
+  username,
+  avatarUrl,
+}: ProfileProps) => {
   const bio = initialProfile?.bio ?? ""
   const lifeEvents: LifeEvent[] = (initialProfile?.lifeEvents ?? []).map(
     (r) => ({
@@ -25,7 +29,6 @@ export const Profile = ({ initialProfile, username, avatarUrl }: ProfileProps) =
       section: r.section,
     }),
   )
-
 
   return (
     <Main>
