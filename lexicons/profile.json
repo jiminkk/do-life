@@ -3,7 +3,7 @@
   "id": "st.lifepo.profile",
   "defs": {
     "main": {
-      "type": "query", 
+      "type": "query",
       "description": "Get a user's do-life profile including bio and life events.",
       "parameters": {
         "type": "params",
@@ -23,13 +23,7 @@
           "properties": {
             "handle": { "type": "string" },
             "bio": { "type": "string" },
-            "lifeEvents": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "#lifeEvent"
-              }
-            }
+            "avatar": { "type": "string" }
           }
         }
       }

@@ -5,7 +5,7 @@ export const Main = ({
   username,
 }: {
   children: React.ReactNode
-  username: string
+  username?: string
 }) => {
   return (
     <div className="min-h-screen">

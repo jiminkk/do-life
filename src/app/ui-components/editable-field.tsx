@@ -76,7 +76,7 @@ export const EditableField = ({
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className={`outline-none bg-stone-100 rounded px-2 py-1 w-full resize-none overflow-y-auto h-24`}
+          className={`outline-none bg-stone-100 rounded px-2 py-1 w-full resize-none overflow-y-auto h-24 ${className}`}
         />
       )
     }

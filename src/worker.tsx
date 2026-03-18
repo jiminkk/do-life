@@ -18,6 +18,9 @@ import {
   serveJwks,
 } from "@/auth/routes"
 import { loadProfile } from "@/app/actions/profile"
+import { getAvatarUrlByHandle, getOrFetchAvatarUrl } from "@/lib/db"
+import { fetchBlueskyProfile } from "@/lib/bluesky"
+import { env } from "cloudflare:workers"
 
 export type AppContext = {
   isAuthenticated?: boolean
@@ -49,13 +52,19 @@ export default defineApp([
     route("/about", About),
     route("/edit-profile", async ({ ctx }) => {
       const username = ctx.username ?? ""
-      const profile = await loadProfile(username)
-      return <EditProfile initialProfile={profile} username={username} />
+      const [profile, avatarUrl] = await Promise.all([
+        loadProfile(username),
+        getAvatarUrlByHandle(env.DB, username),
+      ])
+      return <EditProfile initialProfile={profile} username={username} avatarUrl={avatarUrl} />
     }),
     route("/:username", async ({ params }) => {
       const profileUsername = (params as { username: string }).username
-      const profile = await loadProfile(profileUsername)
-      return <Profile initialProfile={profile} username={profileUsername} />
+      const [profile, avatarUrl] = await Promise.all([
+        loadProfile(profileUsername),
+        getOrFetchAvatarUrl(env.DB, profileUsername, fetchBlueskyProfile),
+      ])
+      return <Profile initialProfile={profile} username={profileUsername} avatarUrl={avatarUrl} />
     }),
   ]),
 ])

@@ -15,12 +15,15 @@ import {
   addLifeEvent,
   updateLifeEvent,
   deleteLifeEvent,
+  syncAvatar,
+  uploadAvatar,
 } from "@/app/actions/profile"
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 
 interface EditProfileProps {
   initialProfile: ProfileData | null
   username: string
+  avatarUrl: string | null
 }
 
 const toDrafts = (events: LifeEvent[]): DraftEvent[] =>
@@ -38,7 +41,7 @@ const toDrafts = (events: LifeEvent[]): DraftEvent[] =>
     }
   })
 
-export const EditProfile = ({ initialProfile, username }: EditProfileProps) => {
+export const EditProfile = ({ initialProfile, username, avatarUrl }: EditProfileProps) => {
   const initialEvents: LifeEvent[] = (initialProfile?.lifeEvents ?? []).map(
     (r) => ({
       id: r.id,
@@ -59,6 +62,15 @@ export const EditProfile = ({ initialProfile, username }: EditProfileProps) => {
   const [isEditingAll, setIsEditingAll] = useState(false)
   const [removedIds, setRemovedIds] = useState<string[]>([])
   const savedSnapshot = useRef<LifeEvent[]>(lifeEvents)
+
+  const handleImageSelect = useCallback((file: File) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      uploadAvatar(dataUrl).catch(() => {})
+    }
+    reader.readAsDataURL(file)
+  }, [])
 
   const handleRemove = (index: number) => {
     const event = lifeEvents[index]
@@ -176,6 +188,9 @@ export const EditProfile = ({ initialProfile, username }: EditProfileProps) => {
     setLifeEvents(savedEvents)
     setDrafts(toDrafts(savedEvents))
     savedSnapshot.current = savedEvents
+
+    // Sync avatar in the background — don't block the save
+    syncAvatar().catch(() => {})
   }
 
   const handleAddBlank = () => {
@@ -208,7 +223,7 @@ export const EditProfile = ({ initialProfile, username }: EditProfileProps) => {
         <main className="flex-1 pb-10 w-full">
           <div className="relative">
             <div className="absolute right-full top-0 pr-6">
-              <Avatar username={username} editable />
+              <Avatar username={username} editable src={avatarUrl ?? undefined} onImageSelect={handleImageSelect} />
             </div>
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium text-stone-700">@{username}</p>
@@ -217,19 +232,33 @@ export const EditProfile = ({ initialProfile, username }: EditProfileProps) => {
           </div>
         </main>
 
+        {!isEditingAll && lifeEvents.length > 0 && (
+          <div className="relative">
+            <div className="absolute right-full top-0 pr-6">
+              <button
+                type="button"
+                onClick={() => {
+                  savedSnapshot.current = lifeEvents
+                  setIsEditingAll(true)
+                }}
+                className="flex hover:text-stone-700 items-center justify-center gap-0.5 text-xs text-stone-400 transition-colors whitespace-nowrap"
+              >
+                {/* <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 -960 960 960"
+                    width="14px"
+                    height="14px"
+                    fill="currentColor"
+                  >
+                    <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
+                  </svg> */}
+                <p>Edit</p>
+              </button>
+            </div>
+          </div>
+        )}
+
         <main className="flex flex-col gap-10 w-full">
-          {!isEditingAll && lifeEvents.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                savedSnapshot.current = lifeEvents
-                setIsEditingAll(true)
-              }}
-              className="self-start text-xs text-stone-400 hover:text-stone-600 transition-colors"
-            >
-              Edit
-            </button>
-          )}
           {!isEditingAll && lifeEvents.length === 0 && (
             <button
               type="button"

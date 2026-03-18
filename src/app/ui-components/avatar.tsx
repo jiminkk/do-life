@@ -9,7 +9,12 @@ interface AvatarProps {
   onImageSelect?: (file: File) => void
 }
 
-export const Avatar = ({ username, editable = false, src, onImageSelect }: AvatarProps) => {
+export const Avatar = ({
+  username,
+  editable = false,
+  src,
+  onImageSelect,
+}: AvatarProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(src ?? null)
 

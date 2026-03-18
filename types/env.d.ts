@@ -1,5 +1,6 @@
 declare namespace Cloudflare {
   interface Env {
+    DB: D1Database
     DID_CACHE: KVNamespace
     HANDLE_CACHE: KVNamespace
     OAUTH_STATE_STORE: KVNamespace

@@ -141,7 +141,7 @@ export const LifeEventForm = (props: LifeEventFormProps) => {
         className={`relative text-sm text-stone-500${props.onClick ? " cursor-pointer hover:bg-stone-50 rounded transition-colors" : ""}`}
         onClick={props.onClick}
       >
-        <div className="absolute right-full top-0 pr-6 text-xs text-stone-400 text-right whitespace-nowrap">
+        <div className="absolute right-full top-0.5 pr-6 text-xs text-stone-400 text-right whitespace-nowrap">
           <p>
             {formatDate(props.event.startDate)} –{" "}
             {props.event.endDate ? formatDate(props.event.endDate) : "present"}

@@ -16,6 +16,14 @@
   "observability": {
     "enabled": true,
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lifepost",
+      "database_id": "12322afc-0d5c-4ae6-abd1-15d3b9e43bf9",
+      "remote": true,
+    },
+  ],
   // KV Namespaces — replace placeholder IDs after running `wrangler kv namespace create <NAME>`
   "kv_namespaces": [
     {

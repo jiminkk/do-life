@@ -2,6 +2,8 @@ import { env } from "cloudflare:workers"
 import { RouteMiddleware } from "rwsdk/router"
 import { createOAuthClient, getClientMetadata, getPublicJwk } from "./client"
 import { createSessionCookie, clearSessionCookie, getSession } from "./session"
+import { fetchBlueskyProfile } from "@/lib/bluesky"
+import { upsertUser } from "@/lib/db"
 
 export const loadSession =
   (): RouteMiddleware =>
@@ -73,18 +75,14 @@ export const handleCallback: RouteMiddleware = async ({ request }) => {
     const { session } = await client.callback(params)
     const did = session.did
 
-    // Fetch handle from the Bluesky public API
-    let handle: string = did
+    // Fetch handle and avatar from the Bluesky public API
+    const { handle, avatar } = await fetchBlueskyProfile(did)
+
+    // Persist user info in D1
     try {
-      const resp = await fetch(
-        `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
-      )
-      if (resp.ok) {
-        const profile = (await resp.json()) as { handle: string }
-        handle = profile.handle
-      }
+      await upsertUser(env.DB, { did, handle, bskyAvatarUrl: avatar })
     } catch {
-      // Fall back to the DID if handle fetch fails
+      // Don't block sign-in if D1 write fails
     }
 
     const cookie = await createSessionCookie(did, handle, env.SESSION_SECRET)
