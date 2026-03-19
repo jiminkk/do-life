@@ -4,6 +4,7 @@ import { requestInfo } from "rwsdk/worker"
 import { Agent } from "@atproto/api"
 import { getAgent } from "@/auth/agent"
 import { ProfileData } from "@/app/types/types"
+import { resolvePdsUrl } from "@/lib/bluesky"
 
 const LIFE_EVENT_COLLECTION = "st.lifepo.lifeEvent"
 const PROFILE_COLLECTION = "st.lifepo.profile"
@@ -97,26 +98,31 @@ export async function deleteLifeEvent(id: string): Promise<void> {
 
 export async function loadProfile(
   username: string,
+  cached?: { did: string; pdsUrl: string | null } | null,
 ): Promise<ProfileData | null> {
   if (import.meta.env.VITE_IS_DEV_SERVER) return null
   try {
-    // Resolve handle → DID
-    const resolveResp = await fetch(
-      `https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(username)}`,
-    )
-    if (!resolveResp.ok) return null
-    const { did } = (await resolveResp.json()) as { did: string }
+    let did: string
+    let pdsUrl: string | null
 
-    // Resolve DID → PDS URL
-    const didDocResp = await fetch(`https://plc.directory/${did}`)
-    if (!didDocResp.ok) return null
-    const didDoc = (await didDocResp.json()) as {
-      service?: Array<{ id: string; serviceEndpoint: string }>
+    if (cached?.did) {
+      did = cached.did
+      pdsUrl = cached.pdsUrl ?? null
+    } else {
+      // Resolve handle → DID (uncached path)
+      const resolveResp = await fetch(
+        `https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(username)}`,
+      )
+      if (!resolveResp.ok) return null
+      ;({ did } = (await resolveResp.json()) as { did: string })
+      pdsUrl = null
     }
-    const pdsUrl = didDoc.service?.find(
-      (s) => s.id === "#atproto_pds",
-    )?.serviceEndpoint
-    if (!pdsUrl) return null
+
+    // Resolve DID → PDS URL if not cached
+    if (!pdsUrl) {
+      pdsUrl = await resolvePdsUrl(did)
+      if (!pdsUrl) return null
+    }
 
     // Fetch records from PDS (public reads, no auth needed)
     const agent = new Agent(pdsUrl)

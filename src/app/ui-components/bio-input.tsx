@@ -18,7 +18,7 @@ export const BioInput = ({ bio, onSubmit }: BioInputProps) => {
       onSave={handleSave}
       multiline
       placeholder="I am a writer and an aspiring designer..."
-      className="text-sm"
+      className="text-xs text-stone-500"
     />
   )
 }

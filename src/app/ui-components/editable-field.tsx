@@ -76,7 +76,7 @@ export const EditableField = ({
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className={`outline-none bg-stone-100 rounded px-2 py-1 w-full resize-none overflow-y-auto h-24 ${className}`}
+          className={`outline-none bg-white border border-stone-300 rounded px-1 -mx-1 py-1 w-full resize-none overflow-y-auto h-24 ${className}`}
         />
       )
     }
@@ -99,8 +99,8 @@ export const EditableField = ({
       <span
         onClick={handleClick}
         className={`${
-          editable ? "cursor-pointer" : "cursor-default"
-        } block w-full min-h-6 whitespace-pre-wrap ${className}`}
+          editable ? "cursor-pointer hover:text-stone-700" : "cursor-default"
+        } block w-full min-h-6 whitespace-pre-wrap transition-colors ${className}`}
       >
         {value || <span className="text-stone-400">{placeholder}</span>}
       </span>

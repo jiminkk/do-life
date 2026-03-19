@@ -1,28 +1,40 @@
+export interface CachedUser {
+  did: string
+  bskyAvatarUrl: string | null
+  pdsUrl: string | null
+}
+
 export async function upsertUser(
   db: D1Database,
-  data: { did: string; handle: string; bskyAvatarUrl: string | null },
+  data: {
+    did: string
+    handle: string
+    bskyAvatarUrl: string | null
+    pdsUrl?: string | null
+  },
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO users (did, handle, bsky_avatar_url) VALUES (?, ?, ?)
-       ON CONFLICT(did) DO UPDATE SET handle = excluded.handle, bsky_avatar_url = excluded.bsky_avatar_url`,
+      `INSERT INTO users (did, handle, bsky_avatar_url, pds_url) VALUES (?, ?, ?, ?)
+       ON CONFLICT(did) DO UPDATE SET handle = excluded.handle, bsky_avatar_url = excluded.bsky_avatar_url, pds_url = COALESCE(excluded.pds_url, pds_url)`,
     )
-    .bind(data.did, data.handle, data.bskyAvatarUrl)
+    .bind(data.did, data.handle, data.bskyAvatarUrl, data.pdsUrl ?? null)
     .run()
 }
 
-export async function getAvatarUrlByHandle(
+export async function getUserByHandle(
   db: D1Database,
   handle: string,
-): Promise<string | null> {
-  const row = await db
-    .prepare(`SELECT bsky_avatar_url FROM users WHERE handle = ?`)
+): Promise<CachedUser | null> {
+  return db
+    .prepare(
+      `SELECT did, bsky_avatar_url AS bskyAvatarUrl, pds_url AS pdsUrl FROM users WHERE handle = ?`,
+    )
     .bind(handle)
-    .first<{ bsky_avatar_url: string | null }>()
-  return row?.bsky_avatar_url ?? null
+    .first<CachedUser>()
 }
 
-export async function getOrFetchAvatarUrl(
+export async function getOrFetchUser(
   db: D1Database,
   handle: string,
   fetchProfile: (actor: string) => Promise<{
@@ -30,26 +42,18 @@ export async function getOrFetchAvatarUrl(
     handle: string
     avatar: string | null
   }>,
-): Promise<string | null> {
-  const row = await db
-    .prepare(`SELECT bsky_avatar_url FROM users WHERE handle = ?`)
-    .bind(handle)
-    .first<{ bsky_avatar_url: string | null }>()
-
-  if (row) {
-    return row.bsky_avatar_url ?? null
-  }
+): Promise<CachedUser | null> {
+  const row = await getUserByHandle(db, handle)
+  if (row) return row
 
   // Not in DB — fetch from Bluesky and insert
   const profile = await fetchProfile(handle)
-  if (profile.avatar) {
-    await db
-      .prepare(
-        `INSERT INTO users (did, handle, bsky_avatar_url) VALUES (?, ?, ?)
-         ON CONFLICT(did) DO UPDATE SET handle = excluded.handle, bsky_avatar_url = excluded.bsky_avatar_url`,
-      )
-      .bind(profile.did, profile.handle, profile.avatar)
-      .run()
-  }
-  return profile.avatar
+  await db
+    .prepare(
+      `INSERT INTO users (did, handle, bsky_avatar_url) VALUES (?, ?, ?)
+       ON CONFLICT(did) DO UPDATE SET handle = excluded.handle, bsky_avatar_url = excluded.bsky_avatar_url`,
+    )
+    .bind(profile.did, profile.handle, profile.avatar)
+    .run()
+  return { did: profile.did, bskyAvatarUrl: profile.avatar, pdsUrl: null }
 }
