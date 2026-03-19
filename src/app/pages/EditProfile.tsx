@@ -39,7 +39,11 @@ const toDrafts = (events: LifeEvent[]): DraftEvent[] =>
     }
   })
 
-export const EditProfile = ({ initialProfile, username, avatarUrl }: EditProfileProps) => {
+export const EditProfile = ({
+  initialProfile,
+  username,
+  avatarUrl,
+}: EditProfileProps) => {
   const initialEvents: LifeEvent[] = (initialProfile?.lifeEvents ?? []).map(
     (r) => ({
       id: r.id,
@@ -220,7 +224,7 @@ export const EditProfile = ({ initialProfile, username, avatarUrl }: EditProfile
   return (
     <Main username={username}>
       <Container>
-        <main className="flex-1 pb-10 w-full">
+        <main className="flex-1 pb-2 w-full">
           <div className="relative">
             <div className="absolute right-full top-0 pr-6">
               <Avatar username={username} src={avatarUrl ?? undefined} />

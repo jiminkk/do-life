@@ -98,7 +98,7 @@ export async function deleteLifeEvent(id: string): Promise<void> {
 
 export async function loadProfile(
   username: string,
-  cached?: { did: string; pdsUrl: string | null } | null,
+  cached: { did: string; pdsUrl: string | null } | null,
 ): Promise<ProfileData | null> {
   if (import.meta.env.VITE_IS_DEV_SERVER) return null
   try {

@@ -51,16 +51,44 @@ export default defineApp([
     route("/", ({ ctx }) => <DashboardPage username={ctx.username ?? ""} />),
     route("/about", About),
     route("/edit-profile", async ({ ctx }) => {
-      const username = ctx.username ?? ""
+      const username = ctx.username
+      if (username == null) {
+        return new Response(null, { status: 404 })
+      }
+
       const cached = await getUserByHandle(env.DB, username)
       const profile = await loadProfile(username, cached)
-      return <EditProfile initialProfile={profile} username={username} avatarUrl={cached?.bskyAvatarUrl ?? null} />
+      return (
+        <EditProfile
+          initialProfile={profile}
+          username={username}
+          avatarUrl={cached?.bskyAvatarUrl ?? null}
+        />
+      )
     }),
+    route("/favicon.ico", () => new Response(null, { status: 404 })),
     route("/:username", async ({ params }) => {
       const profileUsername = (params as { username: string }).username
-      const cached = await getOrFetchUser(env.DB, profileUsername, fetchBlueskyProfile)
+      const cached = await getOrFetchUser(
+        env.DB,
+        profileUsername,
+        fetchBlueskyProfile,
+      )
+      if (cached == null) {
+        return new Response(null, { status: 404 })
+      }
+
       const profile = await loadProfile(profileUsername, cached)
-      return <Profile initialProfile={profile} username={profileUsername} avatarUrl={cached?.bskyAvatarUrl ?? null} />
+
+      const isRegistered = cached.createdAt != null
+      return (
+        <Profile
+          initialProfile={profile}
+          username={profileUsername}
+          avatarUrl={cached.bskyAvatarUrl ?? null}
+          isRegistered={isRegistered}
+        />
+      )
     }),
   ]),
 ])

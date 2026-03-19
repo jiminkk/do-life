@@ -76,14 +76,24 @@ export const handleCallback: RouteMiddleware = async ({ request }) => {
     const did = session.did
 
     // Fetch handle, avatar, and PDS URL
-    const [{ handle, avatar }, pdsUrl] = await Promise.all([
+    const [bskyProfile, pdsUrl] = await Promise.all([
       fetchBlueskyProfile(did),
       resolvePdsUrl(did),
     ])
 
+    if (bskyProfile === null) return
+
+    const { handle, avatar } = bskyProfile
+
     // Persist user info in D1
     try {
-      await upsertUser(env.DB, { did, handle, bskyAvatarUrl: avatar, pdsUrl })
+      await upsertUser(env.DB, {
+        did,
+        handle,
+        bskyAvatarUrl: avatar,
+        pdsUrl,
+        createdAt: new Date().toISOString(),
+      })
     } catch {
       // Don't block sign-in if D1 write fails
     }

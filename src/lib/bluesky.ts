@@ -1,6 +1,4 @@
-export async function resolvePdsUrl(
-  did: string,
-): Promise<string | null> {
+export async function resolvePdsUrl(did: string): Promise<string | null> {
   const resp = await fetch(`https://plc.directory/${did}`)
   if (!resp.ok) return null
   const didDoc = (await resp.json()) as {
@@ -14,12 +12,12 @@ export async function resolvePdsUrl(
 
 export async function fetchBlueskyProfile(
   actor: string,
-): Promise<{ did: string; handle: string; avatar: string | null }> {
+): Promise<{ did: string; handle: string; avatar: string | null } | null> {
   const resp = await fetch(
     `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`,
   )
   if (!resp.ok) {
-    return { did: actor, handle: actor, avatar: null }
+    return null
   }
   const profile = (await resp.json()) as {
     did: string

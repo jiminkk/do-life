@@ -2,6 +2,7 @@ export interface CachedUser {
   did: string
   bskyAvatarUrl: string | null
   pdsUrl: string | null
+  createdAt: string | null
 }
 
 export async function upsertUser(
@@ -11,14 +12,21 @@ export async function upsertUser(
     handle: string
     bskyAvatarUrl: string | null
     pdsUrl?: string | null
+    createdAt?: string | null
   },
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO users (did, handle, bsky_avatar_url, pds_url) VALUES (?, ?, ?, ?)
-       ON CONFLICT(did) DO UPDATE SET handle = excluded.handle, bsky_avatar_url = excluded.bsky_avatar_url, pds_url = COALESCE(excluded.pds_url, pds_url)`,
+      `INSERT INTO users (did, handle, bsky_avatar_url, pds_url, created_at) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(did) DO UPDATE SET handle = excluded.handle, bsky_avatar_url = excluded.bsky_avatar_url, pds_url = COALESCE(excluded.pds_url, pds_url), created_at = COALESCE(users.created_at, excluded.created_at)`,
     )
-    .bind(data.did, data.handle, data.bskyAvatarUrl, data.pdsUrl ?? null)
+    .bind(
+      data.did,
+      data.handle,
+      data.bskyAvatarUrl,
+      data.pdsUrl ?? null,
+      data.createdAt ?? null,
+    )
     .run()
 }
 
@@ -28,7 +36,7 @@ export async function getUserByHandle(
 ): Promise<CachedUser | null> {
   return db
     .prepare(
-      `SELECT did, bsky_avatar_url AS bskyAvatarUrl, pds_url AS pdsUrl FROM users WHERE handle = ?`,
+      `SELECT did, bsky_avatar_url AS bskyAvatarUrl, pds_url AS pdsUrl, created_at AS createdAt FROM users WHERE handle = ?`,
     )
     .bind(handle)
     .first<CachedUser>()
@@ -41,13 +49,15 @@ export async function getOrFetchUser(
     did: string
     handle: string
     avatar: string | null
-  }>,
+  } | null>,
 ): Promise<CachedUser | null> {
   const row = await getUserByHandle(db, handle)
   if (row) return row
 
   // Not in DB — fetch from Bluesky and insert
   const profile = await fetchProfile(handle)
+  if (profile == null) return null
+
   await db
     .prepare(
       `INSERT INTO users (did, handle, bsky_avatar_url) VALUES (?, ?, ?)
@@ -55,5 +65,10 @@ export async function getOrFetchUser(
     )
     .bind(profile.did, profile.handle, profile.avatar)
     .run()
-  return { did: profile.did, bskyAvatarUrl: profile.avatar, pdsUrl: null }
+  return {
+    did: profile.did,
+    bskyAvatarUrl: profile.avatar,
+    pdsUrl: null,
+    createdAt: null,
+  }
 }
