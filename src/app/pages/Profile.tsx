@@ -21,16 +21,15 @@ export const Profile = ({
   isRegistered,
 }: ProfileProps) => {
   const bio = initialProfile?.bio ?? ""
-  const lifeEvents: LifeEvent[] = (initialProfile?.lifeEvents ?? []).map(
-    (r) => ({
+  const lifeEvents: LifeEvent[] = (initialProfile?.lifeEvents ?? [])
+    .map((r) => ({
       id: r.id,
       title: r.title,
       description: r.description ?? "",
       startDate: r.startDate,
       endDate: r.endDate ?? undefined,
       section: r.section,
-    }),
-  )
+    }))
 
   return (
     <Main>

@@ -16,7 +16,7 @@ import {
   updateLifeEvent,
   deleteLifeEvent,
 } from "@/app/actions/profile"
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 
 interface EditProfileProps {
   initialProfile: ProfileData | null
@@ -65,6 +65,24 @@ export const EditProfile = ({
   const [isEditingAll, setIsEditingAll] = useState(false)
   const [removedIds, setRemovedIds] = useState<string[]>([])
   const savedSnapshot = useRef<LifeEvent[]>(lifeEvents)
+  const dragIndexRef = useRef<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  const handleReorder = useCallback((fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return
+    setLifeEvents((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
+    setDrafts((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
+  }, [])
 
   const isProfileDirty = draftBio !== bio
 
@@ -266,15 +284,6 @@ export const EditProfile = ({
                 }}
                 className="flex hover:text-stone-700 items-center justify-center gap-0.5 text-xs text-stone-400 transition-colors whitespace-nowrap"
               >
-                {/* <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 -960 960 960"
-                    width="14px"
-                    height="14px"
-                    fill="currentColor"
-                  >
-                    <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
-                  </svg> */}
                 <p>Edit</p>
               </button>
             </div>
@@ -314,17 +323,64 @@ export const EditProfile = ({
                   }
                 : event
               return (
-                <LifeEventForm
+                <div
                   key={event.id ?? `${event.title}-${i}`}
-                  mode="editing"
-                  event={displayEvent}
-                  isEditing={isEditingAll}
-                  draft={drafts[i]}
-                  onDraftChange={(field, value) =>
-                    handleDraftChange(i, field, value)
-                  }
-                  onRemove={() => handleRemove(i)}
-                />
+                  draggable={isEditingAll}
+                  onDragStart={(e) => {
+                    dragIndexRef.current = i
+                    e.dataTransfer.effectAllowed = "move"
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = "move"
+                    setDragOverIndex(i)
+                  }}
+                  onDragLeave={() => {
+                    setDragOverIndex((prev) => (prev === i ? null : prev))
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    if (dragIndexRef.current !== null) {
+                      handleReorder(dragIndexRef.current, i)
+                    }
+                    dragIndexRef.current = null
+                    setDragOverIndex(null)
+                  }}
+                  onDragEnd={() => {
+                    dragIndexRef.current = null
+                    setDragOverIndex(null)
+                  }}
+                  className={`${isEditingAll && dragOverIndex === i ? "border-t-2 border-stone-300" : "border-t-2 border-transparent"}`}
+                >
+                  {isEditingAll && (
+                    <div className="flex justify-start cursor-grab active:cursor-grabbing py-1 text-stone-300 hover:text-stone-500 transition-colors">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                      >
+                        <circle cx="3" cy="6" r="1.5" />
+                        <circle cx="3" cy="12" r="1.5" />
+                        <circle cx="9" cy="6" r="1.5" />
+                        <circle cx="9" cy="12" r="1.5" />
+                        <circle cx="15" cy="6" r="1.5" />
+                        <circle cx="15" cy="12" r="1.5" />
+                      </svg>
+                    </div>
+                  )}
+                  <LifeEventForm
+                    mode="editing"
+                    event={displayEvent}
+                    isEditing={isEditingAll}
+                    draft={drafts[i]}
+                    onDraftChange={(field, value) =>
+                      handleDraftChange(i, field, value)
+                    }
+                    onRemove={() => handleRemove(i)}
+                  />
+                </div>
               )
             })}
           </div>
